@@ -30,7 +30,10 @@
         {
           default = pkgs.mkShell {
             packages = [
-              (pkgs.sbcl.withPackages (sp: [ sp.str ]))
+              (pkgs.sbcl.withPackages (sp: [
+                sp.str
+                sp.cl-ppcre
+              ]))
               (pkgs.python3.withPackages (ps: [ ps.ipython ]))
             ];
           };
