@@ -7,46 +7,43 @@
           while line
           collect line)))
 
-(defparameter file-contents (get-file "day1-input.txt"))
-;(setf file-contents
-;      '(
-;      "3   4"
-;      "4   3"
-;      "2   5"
-;      "1   3"
-;      "3   9"
-;      "3   3"))
+(defparameter file-contents (get-file "../inputs/day1/day1-input.txt"))
+
+;;(setf file-contents
+;;      '(
+;;      "3   4"
+;;      "4   3"
+;;      "2   5"
+;;      "1   3"
+;;      "3   9"
+;;      "3   3"))
 
 (defun filter-empty-string (lst)
-       (remove-if #'(lambda (x) (string= x "")) lst))
+  (remove-if #'(lambda (x) (string= x "")) lst))
 
 (defun map-int (lst)
-       (mapcar #'parse-integer lst))
+  (mapcar #'parse-integer lst))
 
 (defparameter parsed
-      (loop for x in file-contents
-      	    collect (map-int
-		(filter-empty-string
-			(str:split " " x)))))
+  (loop for x in file-contents
+        collect (map-int
+                 (filter-empty-string
+                  (str:split " " x)))))
 
-(defparameter firsts (mapcar #'first parsed))
-(defparameter seconds (mapcar #'second parsed))
+(defparameter left (mapcar #'first parsed))
+(defparameter right (mapcar #'second parsed))
 
-(defparameter table-f (make-hash-table))
-(defparameter table-s (make-hash-table))
+(defparameter left-table (make-hash-table))
+(defparameter right-table (make-hash-table))
 
 (defun inc-table (table val)
-    (if (getHash val table)
-      	(setf (getHash val table) (1+ (getHash val table)))
-	(setf (getHash val table) 1)))
+  (if (getHash val table)
+      (incf (getHash val table) 1)
+      (setf (getHash val table) 1)))
 
 (loop for x in parsed
-      do (let
-      	   ((f (first x))
-            (s (second x)))
-	    (inc-table table-f f)
-	    (inc-table table-s s)
-	   ))
+      do (inc-table left-table (first x))
+         (inc-table right-table (second x)))
 
 (defun hash-table-to-list (hash-table)
   "Convert a hash table to a list of key-value pairs."
@@ -58,13 +55,12 @@
 
 (defun sum (lst) (reduce #'+ lst))
 
-(defparameter v (mapcar (lambda (x)
-	(let ((k (car x))
-	      (v (cdr x)))
-	     (*	(* k v)
-		(if (gethash k table-s)
-		    (gethash k table-s)
-		    0))))
-	(hash-table-to-list table-f)))
+(defparameter v
+  (mapcar (lambda (x)
+            (let* ((k (car x))
+                   (v (cdr x))
+                   (s (gethash k right-table)))
+              (*	(* k v) (if s s 0))))
+          (hash-table-to-list left-table)))
 
 (print (sum v))
