@@ -8,13 +8,19 @@
           while line
           collect line)))
 
-(defparameter inputs (get-file "../inputs/day3/input"))
+(defparameter inputs
+  (get-file "../inputs/day3/input"))
 
 (defparameter pat "mul\\(\\d+,\\d+\\)")
-(defparameter matching (reduce #'append (mapcar (lambda (x) (cl-ppcre:all-matches-as-strings pat x)) inputs)))
+(defparameter matching
+  (reduce #'append inputs
+          :key (lambda (x)
+                 (cl-ppcre:all-matches-as-strings pat x)))
 
-(defparameter mvalues (mapcar (lambda (x) (mapcar #'parse-integer
-                                                  (cl-ppcre:all-matches-as-strings "\\d+" x)))
-                              matching))
+(defparameter mvalues
+  (mapcar (lambda (x)
+            (mapcar #'parse-integer
+                    (cl-ppcre:all-matches-as-strings "\\d+" x)))
+          matching))
 
-(print (reduce #'+ (mapcar (lambda (x) (* (first x) (second x))) mvalues)))
+(print (reduce #'+ mvalues :key (lambda (x) (apply #'* x))))

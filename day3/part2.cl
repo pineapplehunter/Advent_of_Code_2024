@@ -12,10 +12,9 @@
 
 (defparameter pat "mul\\(\\d+,\\d+\\)|do\\(\\)|don't\\(\\)")
 (defparameter matching
-  (reduce #'append
-          (mapcar (lambda (x)
-                    (cl-ppcre:all-matches-as-strings pat x))
-                  inputs)))
+  (reduce #'append inputs
+          :key (lambda (x)
+                 (cl-ppcre:all-matches-as-strings pat x))))
 
 (defparameter parsed
   (mapcar (lambda (x)
