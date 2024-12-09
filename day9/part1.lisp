@@ -1,3 +1,4 @@
+(load (posix-getenv "ASDF"))
 (defpackage :day9
   (:use :cl :asdf))
 (in-package :day9)
@@ -24,19 +25,22 @@
             (expand-free (cdr lst) (1+ id)))))
 
 (defun compress (input-list)
-  (let ((lst (copy-tree input-list))
-        (index 0))
-    (loop while (nthcdr index lst)
+  (let* ((lst (make-array (length input-list) :initial-contents input-list))
+        (hptr 0)
+        (tptr (1- (length lst))))
+    (loop while (< hptr tptr)
           do (progn
-               ;;(print lst)
-               (when (not (nth index lst))
-                 (loop while (not (first (last lst)))
-                       do (setf lst (butlast lst)))
-                 (setf (nth index lst) (first (last lst)))
-                 (setf lst (butlast lst)))
-               (incf index)))
-    lst))
+               (loop while (aref lst hptr)
+                     do (incf hptr))
+               (loop while (not (aref lst tptr))
+                     do (incf tptr -1))
+               (when (< hptr tptr)
+                 (setf (aref lst hptr) (aref lst tptr))
+                 (setf (aref lst tptr) nil)))
+          finally (return (loop for i below (array-dimension lst 0)
+                                collect (aref lst i))))))
 
 (print (loop for val in (compress (expand-file inputs 0))
              for idx from 0
+             when val
              sum (* val idx)))

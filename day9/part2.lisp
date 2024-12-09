@@ -1,3 +1,4 @@
+(load (posix-getenv "ASDF"))
 (defpackage :day9
   (:use :cl :asdf))
 (in-package :day9)
