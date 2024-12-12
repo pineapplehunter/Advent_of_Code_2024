@@ -1,6 +1,6 @@
 (require :asdf)
-(asdf:load-system "cl-ppcre")
-(asdf:load-system "str")
+(asdf:load-system :cl-ppcre)
+(asdf:load-system :str)
 
 (defun get-file (filename)
   (with-open-file (stream filename)
@@ -8,32 +8,30 @@
           while line
           collect line)))
 
-(defparameter inputs (get-file "../inputs/day3/input"))
+(defun inputs ()
+  (get-file "../inputs/day3/input"))
 
 (defparameter pat "mul\\(\\d+,\\d+\\)|do\\(\\)|don't\\(\\)")
-(defparameter matching
-  (reduce #'append inputs
-          :key (lambda (x)
-                 (cl-ppcre:all-matches-as-strings pat x))))
 
-(defparameter parsed
-  (mapcar (lambda (x)
-            (cond
-              ((string= "do()" x) '(:do))
-              ((string= "don't()" x) '(:dont))
-              (t (list :mul
-                       (mapcar #'parse-integer
-                               (cl-ppcre:all-matches-as-strings "\\d+" x))))))
-          matching))
+(defun matching (line)
+  (cl-ppcre:all-matches-as-strings pat line))
 
-(defparameter result
-  (let ((flag t)
-        (sum 0))
-    (loop for x in parsed
-          do (cond
-               ((eq :do (first x)) (setf flag t))
-               ((eq :dont (first x)) (setf flag nil))
-               (flag (incf sum (apply #'* (second x)))))
-          finally (return sum))))
+(defun mul-values (pat)
+  (mapcar #'parse-integer
+          (cl-ppcre:all-matches-as-strings "\\d+" pat)))
 
-(print result)
+(defun main ()
+  (format t "ans: ~A~%"
+          (let ((parsed (loop for line in (inputs)
+                              nconc (matching line)))
+                (sum 0)
+                (flag t))
+            (loop for x in parsed
+                  do (cond
+                       ((string= "do()" x) (setf flag t))
+                       ((string= "don't()" x) (setf flag nil))
+                       (flag (destructuring-bind (a b) (mul-values x)
+                               (incf sum (* a b))))))
+            sum)))
+
+(main)
