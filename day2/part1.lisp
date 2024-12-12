@@ -5,39 +5,27 @@
   (with-open-file (stream filename)
     (loop for line = (read-line stream nil)
           while line
-          collect line)))
+          collect (mapcar #'parse-integer
+                          (str:split-omit-nulls " " line)))))
 
-(defun parse-file (filename)
-  (mapcar (lambda (x)
-            (let* ((splitted (str:split " " x))
-                   (no-empty (remove-if (lambda (y) (string= y "")) splitted))
-                   (numbers (mapcar #'parse-integer no-empty)))
-              numbers))
-          (get-file filename)))
-
-(defparameter parsed (parse-file "../inputs/day2/input"))
+(defun inputs ()
+  (get-file "../inputs/day2/input"))
 
 (defun windowed-iteration (lst)
-  (loop for i from 0 to (1- (length lst))
-        for first = (nth i lst)
-        for second = (nth (1+ i) lst)
-        when second
-          collect (list first second)))
+  (loop for a in lst
+        for b in (rest lst)
+        collect `(,a ,b)))
 
 (defun increasing (lst)
-  (every (lambda (x)
-           (let ((f (first x)) (s (second x))) (< f s)))
+  (every (lambda (x) (destructuring-bind (a b) x (< a b)))
          (windowed-iteration lst)))
 
 (defun decreasing (lst)
-  (every (lambda (x)
-           (let ((f (first x)) (s (second x))) (> f s)))
+  (every (lambda (x) (destructuring-bind (a b) x (> a b)))
          (windowed-iteration lst)))
 
 (defun diff-smaller-than-3 (lst)
-  (every (lambda (x)
-           (let ((f (first x)) (s (second x)))
-             (<= (abs (- f s)) 3)))
+  (every (lambda (x) (destructuring-bind (a b) x (<= (abs (- a b)) 3)))
          (windowed-iteration lst)))
 
 (defun is-ok (lst)
@@ -46,7 +34,10 @@
        (decreasing lst))
    (diff-smaller-than-3 lst)))
 
+(defun main ()
+  (format t "ans: ~A~%"
+          (loop for x in (inputs)
+                when (is-ok x)
+                  sum 1)))
 
-(defparameter ok-list (mapcar #'is-ok parsed))
-
-(print (length (remove nil ok-list)))
+(main)

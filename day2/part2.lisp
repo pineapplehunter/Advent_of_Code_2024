@@ -5,57 +5,44 @@
   (with-open-file (stream filename)
     (loop for line = (read-line stream nil)
           while line
-          collect line)))
+          collect (mapcar #'parse-integer
+                          (str:split-omit-nulls " " line)))))
 
-(defun parse-file (filename)
-  (mapcar (lambda (x)
-            (let* ((splitted (str:split " " x))
-                   (no-empty (remove-if (lambda (y) (string= y "")) splitted))
-                   (numbers (mapcar #'parse-integer no-empty)))
-              numbers))
-          (get-file filename)))
-
-(defparameter parsed (parse-file "../inputs/day2/input"))
+(defun inputs ()
+  (get-file "../inputs/day2/input"))
 
 (defun windowed-iteration (lst)
-  (loop for i from 0 to (1- (length lst))
-        for first = (nth i lst)
-        for second = (nth (1+ i) lst)
-        when second
-          collect (list first second)))
+  (loop for a in lst
+        for b in (rest lst)
+        collect `(,a ,b)))
 
 (defun increasing (lst)
-  (every (lambda (x)
-           (let ((f (first x)) (s (second x))) (< f s)))
+  (every (lambda (x) (destructuring-bind (a b) x (< a b)))
          (windowed-iteration lst)))
 
 (defun decreasing (lst)
-  (every (lambda (x)
-           (let ((f (first x)) (s (second x))) (> f s)))
+  (every (lambda (x) (destructuring-bind (a b) x (> a b)))
          (windowed-iteration lst)))
 
 (defun diff-smaller-than-3 (lst)
-  (every (lambda (x)
-           (let ((f (first x)) (s (second x)))
-             (<= (abs (- f s)) 3)))
+  (every (lambda (x) (destructuring-bind (a b) x (<= (abs (- a b)) 3)))
          (windowed-iteration lst)))
 
 (defun is-ok (lst)
-  (and
-   (or (increasing lst)
-       (decreasing lst))
-   (diff-smaller-than-3 lst)))
+  (and (or (increasing lst)
+           (decreasing lst))
+       (diff-smaller-than-3 lst)))
 
 (defun remove-nth-element (lst n)
   (append (subseq lst 0 n) (subseq lst (1+ n))))
 
-(defparameter ok-list
-  (mapcar (lambda (lst)
-            (some (lambda (x) x)
-                  (cons (is-ok lst)
-                        (loop for i from 0 to (1- (length lst))
-                              collect (let ((sublst (remove-nth-element lst i)))
-                                        (is-ok sublst))))))
-          parsed))
+(defun main ()
+  (format t "ans: ~A~%"
+          (loop for lst in (inputs)
+                when (or (is-ok lst)
+                         (loop for i from 0 below (length lst)
+                               when (is-ok (remove-nth-element lst i))
+                                 return t))
+                  sum 1)))
 
-(print (length (remove nil ok-list)))
+(main)
