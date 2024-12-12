@@ -60,10 +60,10 @@
         sum (perimeter-at (first p) (second p) guarden)))
 
 (defun main ()
-  (print
-   (let ((guarden (guarden (inputs))))
-     (loop for region in (get-all-regions guarden)
-           for perimeter = (perimeter-of-region region guarden)
-           sum (* (length region) perimeter)))))
+  (format t "ans: ~A~%"
+          (let ((guarden (guarden (inputs))))
+            (loop for region in (get-all-regions guarden)
+                  for perimeter = (perimeter-of-region region guarden)
+                  sum (* (length region) perimeter)))))
 
 (main)
