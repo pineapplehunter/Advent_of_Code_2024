@@ -2,65 +2,40 @@
 (asdf:load-system "str")
 
 (defun get-file (filename)
+  "Get file input by filename"
   (with-open-file (stream filename)
     (loop for line = (read-line stream nil)
           while line
-          collect line)))
+          collect (mapcar #'parse-integer (str:split-omit-nulls " " line)))))
 
-(defparameter file-contents (get-file "../inputs/day1/day1-input.txt"))
+(defun inputs ()
+  "Parse inputs"
+  (get-file "../inputs/day1/day1-input.txt"))
 
-;;(setf file-contents
-;;      '(
-;;      "3   4"
-;;      "4   3"
-;;      "2   5"
-;;      "1   3"
-;;      "3   9"
-;;      "3   3"))
+(defmacro inc-or-init (table value)
+  "Increment value in hashmap or init to 1"
+  (let ((access `(gethash ,value ,table)))
+    `(if (null ,access) (setf ,access 1) (incf ,access))))
 
-(defun filter-empty-string (lst)
-  (remove-if #'(lambda (x) (string= x "")) lst))
+(defun main ()
+  (let (;; initialize hash-tables
+        (left-table (make-hash-table))
+        (right-table (make-hash-table))
+        ;; initialize a value for resulting list
+        (left-list))
+    ;; count values in hash-table
+    (loop for x in (inputs)
+          do (destructuring-bind (l r) x
+               (inc-or-init left-table l)
+               (inc-or-init right-table r)))
+    ;; convert the left-table to a list
+    (maphash (lambda (k v) (push `(,k ,v) left-list)) left-table)
+    ;; sum and print
+    (format t "ans: ~A~%"
+            (loop for x in left-list
+                  sum (let* ((k (first x))
+                            (v (second x))
+                            (s (gethash k right-table)))
+                        (* (* k v) (if s s 0)))))))
 
-(defun map-int (lst)
-  (mapcar #'parse-integer lst))
-
-(defparameter parsed
-  (loop for x in file-contents
-        collect (map-int
-                 (filter-empty-string
-                  (str:split " " x)))))
-
-(defparameter left (mapcar #'first parsed))
-(defparameter right (mapcar #'second parsed))
-
-(defparameter left-table (make-hash-table))
-(defparameter right-table (make-hash-table))
-
-(defun inc-table (table val)
-  (if (getHash val table)
-      (incf (getHash val table) 1)
-      (setf (getHash val table) 1)))
-
-(loop for x in parsed
-      do (inc-table left-table (first x))
-         (inc-table right-table (second x)))
-
-(defun hash-table-to-list (hash-table)
-  "Convert a hash table to a list of key-value pairs."
-  (let (result)
-    (maphash (lambda (key value)
-               (push (cons key value) result))  ; Push each key-value pair as a cons
-             hash-table)
-    result))  ; Return the list of pairs (reverse to maintain insertion order)
-
-(defun sum (lst) (reduce #'+ lst))
-
-(defparameter v
-  (mapcar (lambda (x)
-            (let* ((k (car x))
-                   (v (cdr x))
-                   (s (gethash k right-table)))
-              (*	(* k v) (if s s 0))))
-          (hash-table-to-list left-table)))
-
-(print (sum v))
+(main)

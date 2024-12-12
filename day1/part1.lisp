@@ -5,33 +5,20 @@
   (with-open-file (stream filename)
     (loop for line = (read-line stream nil)
           while line
-          collect line)))
+          collect (loop for s in (str:split " " line)
+                        when (string/= "" s)
+                          collect (parse-integer s)))))
 
-(defparameter file-contents (get-file "../inputs/day1/day1-input.txt"))
+(defun inputs () (get-file "../inputs/day1/day1-input.txt"))
 
-(defun filter-empty-string (lst)
-  (remove-if #'(lambda (x) (string= x "")) lst))
+(defun left (lst) (mapcar #'first lst))
+(defun right (lst) (mapcar #'second lst))
 
-(defun map-int (lst)
-  (mapcar #'parse-integer lst))
-
-(defparameter parsed
-  (loop for x in file-contents
-        collect (map-int
-                 (filter-empty-string
-                  (str:split " " x)))))
-
-(defparameter left (mapcar #'first parsed))
-(defparameter right (mapcar #'second parsed))
-
-(defparameter left-sorted (sort left #'<))
-(defparameter right-sorted (sort right #'<))
-
-(defparameter diffs
+(defun diffs (inputs)
   (mapcar (lambda (a b) (abs (- a b)))
-          left-sorted
-          right-sorted))
+          (sort (left inputs) #'<)
+          (sort (right inputs) #'<)))
 
 (defun sum (lst) (reduce #'+ lst))
 
-(print (sum diffs))
+(format t "ans: ~A~%" (sum diffs))
